@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados Modo Inverso - Hazen-Williams{% endblock %}
+
+{% block content %}
+<div class="row mb-3 align-items-center">
+  <div class="col-md-8 col-12">
+    <h2 class="h3 fw-bold mb-1 text-primary">Dimensionamiento Inverso de Diámetro</h2>
+    <p class="text-muted mb-0">
+      Determinación analítica del diámetro mínimo interior según la pérdida admisible de Hazen-Williams.
+    </p>
+  </div>
+  <div class="col-md-4 col-12 text-md-end mt-2 mt-md-0 no-print">
+    <button type="button" class="btn btn-outline-dark me-2" onclick="window.print()">
+      <svg class="me-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Imprimir
+    </button>
+    <a href="{{ url_for('web.inverso') }}" class="btn btn-primary">
+      &larr; Nuevo Cálculo Inverso
+    </a>
+  </div>
+</div>
+
+<!-- 1. TARJETAS DE RESULTADO PRINCIPAL -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-4 col-12">
+    <div class="card h-100 bg-white border-primary shadow-sm">
+      <div class="card-body">
+        <span class="badge bg-primary mb-2">Cálculo Analítico</span>
+        <h5 class="card-title text-muted fw-semibold small text-uppercase">Diámetro Interior Mínimo Teórico</h5>
+        <h2 class="fw-bold text-primary mb-1">{{ resultado.d_min_teorico_mm|formato_es(2) }} mm</h2>
+        <div class="text-muted small">
+          Equivalente a: <code>{{ resultado.d_min_teorico_m|formato_es(5) }} m</code>
+        </div>
+        <div class="small mt-2 pt-2 border-top text-secondary">
+          Velocidad con D teórico: <strong>{{ resultado.velocidad_teorica_ms|formato_es(2) }} m/s</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-12">
+    <div class="card h-100 bg-white border">
+      <div class="card-body">
+        <span class="badge bg-secondary mb-2">Catálogo Sugerido</span>
+        <h5 class="card-title text-muted fw-semibold small text-uppercase">Siguiente Diámetro Comercial Superior</h5>
+        {% if resultado.sugerencia_comercial %}
+          <h3 class="fw-bold text-dark mb-1">{{ resultado.sugerencia_comercial.dn_nominal }}</h3>
+          <div class="text-muted small">
+            Diámetro Interior Real: <strong>{{ resultado.sugerencia_comercial.d_interior_mm|formato_es(1) }} mm</strong>
+          </div>
+          <div class="small mt-2 pt-2 border-top">
+            Velocidad comercial: <strong>{{ resultado.sugerencia_comercial.velocidad_ms|formato_es(2) }} m/s</strong>
+          </div>
+        {% else %}
+          <h4 class="text-warning">No encontrado</h4>
+          <p class="small text-muted">El diámetro excede los comerciales precargados en el catálogo.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-12">
+    <div class="card h-100 bg-white border">
+      <div class="card-body">
+        <span class="badge bg-info text-dark mb-2">Condiciones de Diseño</span>
+        <h5 class="card-title text-muted fw-semibold small text-uppercase">Pérdida Admisible Fijada</h5>
+        <h3 class="fw-bold text-dark mb-1">{{ resultado.hf_adm_admisible_m|formato_es(2) }} m</h3>
+        <div class="text-muted small">
+          Gradiente unitario: <code>{{ (resultado.j_adm_m_m * 100)|formato_es(3) }} m/100m</code>
+        </div>
+        {% if resultado.sugerencia_comercial %}
+          <div class="small mt-2 pt-2 border-top text-success">
+            hf resultante comercial: <strong>{{ resultado.sugerencia_comercial.hf_m|formato_es(2) }} m</strong> (&le; admisible)
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. SEMÁFORO DE VERIFICACIONES -->
+<div class="card mb-4 border">
+  <div class="card-header bg-white py-3">
+    <h5 class="card-title mb-0 fw-bold">Verificaciones Técnicas del Diámetro Obtenido</h5>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Parámetro</th>
+          <th style="width: 15%; text-align: center;">Estado</th>
+          <th style="width: 20%;">Valor Obtenido</th>
+          <th style="width: 35%;">Mensaje de Verificación</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in resultado.verificaciones %}
+          <tr>
+            <td class="fw-semibold">{{ v.parametro }}</td>
+            <td class="text-center">
+              {% if v.estado.value == 'CUMPLE' %}
+                <span class="badge badge-cumple">CUMPLE</span>
+              {% elif v.estado.value == 'ADVERTENCIA' %}
+                <span class="badge badge-advertencia">ADVERTENCIA</span>
+              {% else %}
+                <span class="badge badge-no-cumple">NO CUMPLE</span>
+              {% endif %}
+            </td>
+            <td><code>{{ v.valor_obtenido }}</code></td>
+            <td class="small">{{ v.mensaje }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 3. MEMORIA DE CÁLCULO PASO A PASO -->
+<div class="card mb-4 border print-page-break">
+  <div class="card-header bg-white py-3">
+    <h5 class="card-title mb-0 fw-bold">Memoria de Cálculo Paso a Paso (Modo Inverso)</h5>
+  </div>
+  <div class="card-body">
+    <div class="row g-2">
+      {% for paso in resultado.memoria_pasos %}
+        <div class="col-12">
+          <div class="formula-box">
+            <div class="formula-title">{{ paso.descripcion }}</div>
+            <div class="formula-expr">{{ paso.formula_simbolica }}</div>
+            <div class="formula-subst">{{ paso.sustitucion }}</div>
+            <div class="formula-res">&rArr; {{ paso.resultado }} {{ paso.unidad }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="text-center no-print my-4">
+  <button type="button" class="btn btn-outline-dark btn-lg me-2" onclick="window.print()">
+    Imprimir Memoria Técnica
+  </button>
+  <a href="{{ url_for('web.inverso') }}" class="btn btn-primary btn-lg">
+    Realizar Nuevo Cálculo Inverso
+  </a>
+</div>
+{% endblock %}

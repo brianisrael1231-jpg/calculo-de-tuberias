@@ -1,0 +1,678 @@
+/* ==========================================================================
+   HAZEN-WILLIAMS EXPRESS - SISTEMA DE DISEÑO Y ESTILOS MODERNOS (UI/UX)
+   Diseño de ingeniería hidráulica: estético, limpio, responsivo y profesional
+   ========================================================================== */
+
+:root {
+  --hw-primary: #0284c7;
+  --hw-primary-dark: #0369a1;
+  --hw-primary-light: #e0f2fe;
+  --hw-accent: #2563eb;
+  --hw-slate-900: #0f172a;
+  --hw-slate-800: #1e293b;
+  --hw-slate-700: #334155;
+  --hw-slate-600: #475569;
+  --hw-slate-500: #64748b;
+  --hw-slate-200: #e2e8f0;
+  --hw-slate-100: #f1f5f9;
+  --hw-slate-50: #f8fafc;
+
+  --hw-success: #10b981;
+  --hw-success-bg: #ecfdf5;
+  --hw-success-border: #a7f3d0;
+  --hw-success-text: #047857;
+
+  --hw-warning: #f59e0b;
+  --hw-warning-bg: #fffbeb;
+  --hw-warning-border: #fde68a;
+  --hw-warning-text: #b45309;
+
+  --hw-danger: #ef4444;
+  --hw-danger-bg: #fef2f2;
+  --hw-danger-border: #fecaca;
+  --hw-danger-text: #b91c1c;
+
+  --hw-card-radius: 14px;
+  --hw-card-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --hw-card-shadow-hover: 0 12px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
+}
+
+body {
+  background-color: var(--hw-slate-50);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--hw-slate-800);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   BARRA DE NAVEGACIÓN MODERNA
+   ────────────────────────────────────────────────────────────────── */
+.navbar-brand-custom {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 1.15rem;
+  color: #ffffff !important;
+}
+
+.brand-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+}
+
+.nav-link-custom {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem !important;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.nav-link-custom:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link-custom.active {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   TARJETAS Y CONTENEDORES
+   ────────────────────────────────────────────────────────────────── */
+.card-modern {
+  background-color: #ffffff;
+  border: 1px solid var(--hw-slate-200);
+  border-radius: var(--hw-card-radius);
+  box-shadow: var(--hw-card-shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  overflow: hidden;
+}
+
+.card-modern:hover {
+  box-shadow: var(--hw-card-shadow-hover);
+}
+
+.card-header-modern {
+  background: #ffffff;
+  border-bottom: 1px solid var(--hw-slate-200);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header-gradient {
+  background: linear-gradient(135deg, var(--hw-slate-900) 0%, var(--hw-slate-800) 100%);
+  color: #ffffff;
+  border-bottom: none;
+  padding: 1rem 1.25rem;
+}
+
+/* Hero Banner */
+.hero-banner {
+  background: linear-gradient(135deg, #ffffff 0%, var(--hw-slate-50) 100%);
+  border: 1px solid var(--hw-slate-200);
+  border-radius: var(--hw-card-radius);
+  box-shadow: var(--hw-card-shadow);
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-banner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--hw-primary) 0%, var(--hw-accent) 100%);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   FORMULARIOS Y CAMPOS
+   ────────────────────────────────────────────────────────────────── */
+.form-label-modern {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--hw-slate-700);
+  margin-bottom: 0.35rem;
+}
+
+.form-control-modern, .form-select-modern {
+  border: 1.5px solid var(--hw-slate-200);
+  border-radius: 9px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.95rem;
+  color: var(--hw-slate-800);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background-color: #ffffff;
+}
+
+.form-control-modern:focus, .form-select-modern:focus {
+  border-color: var(--hw-primary);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+  outline: none;
+}
+
+.input-addon-modern {
+  background-color: var(--hw-slate-100);
+  border: 1.5px solid var(--hw-slate-200);
+  color: var(--hw-slate-600);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 0 9px 9px 0;
+  padding: 0 0.85rem;
+}
+
+/* Botón Principal */
+.btn-calculate {
+  background: linear-gradient(135deg, var(--hw-primary) 0%, #0369a1 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-calculate:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-calculate:active {
+  transform: translateY(0);
+}
+
+/* Tarjeta de Sugerencia Inteligente */
+.callout-proposal {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   VISUALIZADOR 3D ESTILIZADO
+   ────────────────────────────────────────────────────────────────── */
+.viewer-3d-wrapper {
+  background-color: #ffffff;
+  border: 1px solid var(--hw-slate-200);
+  border-radius: var(--hw-card-radius);
+  overflow: hidden;
+  box-shadow: var(--hw-card-shadow);
+}
+
+.viewer-3d-toolbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--hw-slate-200);
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn-view-preset {
+  background-color: var(--hw-slate-100);
+  border: 1px solid var(--hw-slate-200);
+  color: var(--hw-slate-700);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-view-preset:hover {
+  background-color: #ffffff;
+  border-color: var(--hw-primary);
+  color: var(--hw-primary);
+}
+
+.viewer-3d-container {
+  width: 100%;
+  height: 390px;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  position: relative;
+  cursor: grab;
+}
+
+.viewer-3d-container:active {
+  cursor: grabbing;
+}
+
+.viewer-3d-help-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.74rem;
+  color: var(--hw-slate-600);
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.viewer-3d-chips {
+  background-color: var(--hw-slate-50);
+  border-top: 1px solid var(--hw-slate-200);
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--hw-slate-600);
+}
+
+.chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #ffffff;
+  border: 1px solid var(--hw-slate-200);
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   RESULTADOS (KPI DASHBOARD Y SEMÁFOROS)
+   ────────────────────────────────────────────────────────────────── */
+.kpi-card {
+  background-color: #ffffff;
+  border: 1px solid var(--hw-slate-200);
+  border-radius: 12px;
+  padding: 1.1rem;
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--hw-slate-200);
+}
+
+.kpi-card.kpi-primary::before {
+  background: var(--hw-primary);
+}
+
+.kpi-card.kpi-success::before {
+  background: var(--hw-success);
+}
+
+.kpi-card.kpi-warning::before {
+  background: var(--hw-warning);
+}
+
+.kpi-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--hw-slate-500);
+  margin-bottom: 0.4rem;
+}
+
+.kpi-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--hw-slate-900);
+  line-height: 1.1;
+}
+
+.kpi-unit {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--hw-slate-500);
+  margin-left: 0.25rem;
+}
+
+/* Semáforos técnicos */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.badge-cumple {
+  background-color: var(--hw-success-bg);
+  color: var(--hw-success-text);
+  border: 1px solid var(--hw-success-border);
+}
+
+.badge-advertencia {
+  background-color: var(--hw-warning-bg);
+  color: var(--hw-warning-text);
+  border: 1px solid var(--hw-warning-border);
+}
+
+.badge-no-cumple {
+  background-color: var(--hw-danger-bg);
+  color: var(--hw-danger-text);
+  border: 1px solid var(--hw-danger-border);
+}
+
+/* Barra de diagnóstico de velocidad */
+.gauge-container {
+  margin-top: 0.75rem;
+  background-color: var(--hw-slate-100);
+  border-radius: 6px;
+  padding: 0.4rem;
+  border: 1px solid var(--hw-slate-200);
+}
+
+.gauge-bar-zones {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+
+.gauge-zone-sedimentacion {
+  flex: 0.6;
+  background-color: #fde68a;
+}
+
+.gauge-zone-optimo {
+  flex: 1.4;
+  background-color: #86efac;
+}
+
+.gauge-zone-erosion {
+  flex: 1.0;
+  background-color: #fca5a5;
+}
+
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--hw-slate-500);
+}
+
+/* Memoria de cálculo paso a paso */
+.formula-box-modern {
+  background-color: var(--hw-slate-50);
+  border-left: 4px solid var(--hw-primary);
+  border-radius: 0 8px 8px 0;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.85rem;
+  border-top: 1px solid var(--hw-slate-200);
+  border-right: 1px solid var(--hw-slate-200);
+  border-bottom: 1px solid var(--hw-slate-200);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.formula-box-modern .formula-title {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 700;
+  color: var(--hw-slate-700);
+  font-size: 0.92rem;
+  margin-bottom: 0.25rem;
+}
+
+.formula-box-modern .formula-expr {
+  color: var(--hw-primary-dark);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.formula-box-modern .formula-subst {
+  color: var(--hw-slate-600);
+  font-size: 0.88rem;
+  margin-top: 0.15rem;
+}
+
+.formula-box-modern .formula-res {
+  color: var(--hw-success-text);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-top: 0.15rem;
+}
+
+/* Tabla de Diámetros Comerciales */
+.table-commercial {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--hw-slate-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-commercial th {
+  background-color: var(--hw-slate-100);
+  color: var(--hw-slate-700);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--hw-slate-200);
+}
+
+.table-commercial td {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--hw-slate-100);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ELEMENTOS VISUALES TEMÁTICOS E IMÁGENES TÉCNICAS
+   ────────────────────────────────────────────────────────────────── */
+.hero-img-card {
+  width: 210px;
+  height: 105px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hero-img-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+}
+
+.hero-img-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.hero-img-card:hover img {
+  transform: scale(1.06);
+}
+
+.hero-img-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.render-hd-container {
+  width: 100%;
+  height: 390px;
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.render-hd-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.render-hd-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.9) 85%);
+  padding: 2rem 1.25rem 0.85rem;
+  color: #ffffff;
+}
+
+.view-tab-btn {
+  border: 1.5px solid var(--hw-slate-200);
+  background-color: var(--hw-slate-100);
+  color: var(--hw-slate-700);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.view-tab-btn:hover {
+  background-color: #ffffff;
+  border-color: var(--hw-primary);
+  color: var(--hw-primary);
+}
+
+.view-tab-btn.active {
+  background-color: var(--hw-primary);
+  border-color: var(--hw-primary);
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+.mini-thumbnail-mat {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1.5px solid var(--hw-slate-200);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.table-summary-kpi {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 0.88rem;
+}
+
+.table-summary-kpi th {
+  background-color: var(--hw-slate-50);
+  color: var(--hw-slate-600);
+  font-weight: 600;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1.5px solid var(--hw-slate-200);
+}
+
+.table-summary-kpi td {
+  padding: 0.55rem 0.75rem;
+  color: var(--hw-slate-800);
+  border-bottom: 1px solid var(--hw-slate-100);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   ESTILOS DE IMPRESIÓN (@media print)
+   ────────────────────────────────────────────────────────────────── */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt;
+  }
+
+  .no-print,
+  nav,
+  .navbar,
+  footer,
+  .btn,
+  .viewer-3d-toolbar,
+  .viewer-3d-help-badge {
+    display: none !important;
+  }
+
+  .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .card-modern, .kpi-card {
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 1rem !important;
+  }
+
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 1.25rem;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 0.5rem;
+  }
+}
+
+@media screen {
+  .print-only-header {
+    display: none !important;
+  }
+}

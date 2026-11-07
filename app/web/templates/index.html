@@ -1,0 +1,689 @@
+{% extends "base.html" %}
+
+{% block title %}Cálculo Rápido de Tuberías - Hazen-Williams{% endblock %}
+
+{% block content %}
+{% set mat_sel = valores.material_id if renders[valores.material_id] is defined else 'pvc' %}
+{% set render_sel = renders[mat_sel] %}
+
+<!-- Banner Superior / Hero con Imagen Temática -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="hero-banner d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="flex-grow-1" style="max-width: 680px;">
+        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+            INGENIERÍA HIDRÁULICA Y SANITARIA
+          </span>
+          <span class="text-secondary small">• Flujo a presión a sección llena</span>
+          <span class="badge bg-light text-secondary border small">Fórmula de Hazen-Williams</span>
+        </div>
+        <h1 class="h4 fw-bold text-dark mb-1" style="letter-spacing: -0.02em;">Cálculo y Verificación de Pérdida de Carga</h1>
+        <p class="text-muted mb-2 small">
+          Verificación instantánea de la velocidad del flujo, el gradiente hidráulico y la pérdida de presión total a lo largo de la tubería según el material seleccionado.
+        </p>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <a href="{{ url_for('web.diametro') }}" class="btn btn-outline-primary btn-sm fw-semibold shadow-sm px-3 py-1 rounded-pill">
+            📏 Ir a Calcular Diámetro Necesario &rarr;
+          </a>
+        </div>
+      </div>
+
+      <!-- Imagen Temática Ilustrativa de la Instalación -->
+      <div class="d-none d-md-flex align-items-center gap-3">
+        <div class="hero-img-card" id="hero-img-box" title="Esquema técnico: Tubería enterrada en zanja con cama de arena y flujo hidráulico">
+          <img id="hero-img-preview" src="{{ url_for('static', filename=render_sel.imagen_rel_path) }}" alt="Corte de zanja técnica">
+          <div class="hero-img-badge">📐 Zanja Técnica • Cama de Arena</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if errores %}
+<div class="alert alert-danger shadow-sm alert-dismissible fade show rounded-3 mb-4" role="alert">
+  <div class="d-flex align-items-center gap-2 mb-1">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <strong class="fs-6">Por favor corrija los siguientes datos:</strong>
+  </div>
+  <ul class="mb-0 ps-4 small">
+    {% for error in errores %}
+      <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- COLUMNA IZQUIERDA: FORMULARIO DE DATOS DE ENTRADA             -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="col-lg-5 col-12">
+    <div class="card-modern">
+      <div class="card-header-modern">
+        <h5 class="mb-0 fw-bold fs-6 d-flex align-items-center text-dark">
+          <svg class="me-2 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Datos que debemos ingresar
+        </h5>
+        <span class="badge bg-light text-secondary border small">Entradas</span>
+      </div>
+      <div class="p-4 bg-white">
+        <form method="POST" action="{{ url_for('web.index') }}">
+
+          <!-- ★ USO PREVISTO DE LA CAÑERÍA (propone material como sugerencia) ★ -->
+          <div class="mb-3">
+            <label for="uso_id" class="form-label form-label-modern d-flex justify-content-between align-items-center">
+              <span>Uso previsto de la cañería:</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-normal" style="font-size: 0.72rem;">Sugerencia inteligente</span>
+            </label>
+            <select class="form-select form-select-modern" id="uso_id" name="uso_id">
+              <option value="">-- Seleccionar uso para recibir sugerencia de material --</option>
+              {% for uso in usos %}
+                <option value="{{ uso.id }}"
+                  data-material="{{ uso.material_recomendado_id }}"
+                  data-material-nombre="{{ materiales[uso.material_recomendado_id].nombre }}"
+                  data-material-c="{{ materiales[uso.material_recomendado_id].c_rango }}"
+                  data-explicacion="{{ uso.explicacion }}"
+                  {% if valores.uso_id == uso.id %}selected{% endif %}>
+                  {{ uso.nombre_uso }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <!-- Cartel de propuesta de material (SOLO SUGIERE, NO OBLIGA) -->
+            <div id="caja-propuesta-material" class="callout-proposal mt-2" style="display: none;">
+              <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <span class="badge bg-primary text-white">💡 Sugerencia técnica</span>
+                    <strong class="text-primary fs-6" id="propuesta-nombre"></strong>
+                    <span class="badge bg-white text-dark border" id="propuesta-c"></span>
+                  </div>
+                  <div class="small text-secondary" id="propuesta-explicacion"></div>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-sm btn-primary text-nowrap rounded-pill px-3" id="btn-aplicar-propuesta">
+                    Usar material propuesto
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1. Longitud -->
+          <div class="mb-3">
+            <label for="longitud_m" class="form-label form-label-modern">
+              * Longitud del tramo de cañería:
+            </label>
+            <div class="input-group">
+              <input type="text" class="form-control form-control-modern" id="longitud_m" name="longitud_m" value="{{ valores.longitud_m }}" placeholder="Ej: 150" required>
+              <span class="input-group-text input-addon-modern">metros (m)</span>
+            </div>
+            <div class="form-text text-muted small">Distancia física recorrida por la conducción.</div>
+          </div>
+
+          <!-- 2. Diámetro -->
+          <div class="mb-3">
+            <label for="diametro_valor" class="form-label form-label-modern">
+              * Diámetro del caño:
+            </label>
+            <div class="input-group">
+              <input type="text" class="form-control form-control-modern" id="diametro_valor" name="diametro_valor" value="{{ valores.diametro_valor }}" placeholder="Ej: 110 o 4" required>
+              <select class="form-select form-select-modern bg-light fw-semibold" style="max-width: 150px;" name="diametro_unidad" id="diametro_unidad">
+                <option value="mm" {% if valores.diametro_unidad == 'mm' %}selected{% endif %}>Milímetros (mm)</option>
+                <option value="pulgadas" {% if valores.diametro_unidad == 'pulgadas' %}selected{% endif %}>Pulgadas (")</option>
+              </select>
+            </div>
+            <div class="form-text text-muted small">Diámetro interior real de paso libre del fluido.</div>
+          </div>
+
+          <!-- 3. Caudal -->
+          <div class="mb-3">
+            <label for="caudal_valor" class="form-label form-label-modern">
+              * Caudal requerido:
+            </label>
+            <div class="input-group">
+              <input type="text" class="form-control form-control-modern" id="caudal_valor" name="caudal_valor" value="{{ valores.caudal_valor }}" placeholder="Ej: 12" required>
+              <select class="form-select form-select-modern bg-light fw-semibold" style="max-width: 150px;" name="caudal_unidad" id="caudal_unidad">
+                <option value="l_s" {% if valores.caudal_unidad == 'l_s' %}selected{% endif %}>Litros/seg (L/s)</option>
+                <option value="m3_h" {% if valores.caudal_unidad == 'm3_h' %}selected{% endif %}>m³/hora</option>
+                <option value="m3_s" {% if valores.caudal_unidad == 'm3_s' %}selected{% endif %}>m³/s</option>
+              </select>
+            </div>
+            <div class="form-text text-muted small">Flujo volumétrico conducido a presión.</div>
+          </div>
+
+          <!-- 4. Material y Miniatura Ilustrativa -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="material_id" class="form-label form-label-modern mb-0">
+                * Material del caño:
+              </label>
+              <span class="badge bg-light text-muted border fw-normal small">Elección libre</span>
+            </div>
+            <select class="form-select form-select-modern" id="material_id" name="material_id">
+              {% for mat_key, mat in materiales.items() %}
+                <option value="{{ mat_key }}"
+                  data-c="{{ mat.c_hazen_williams|int }}"
+                  data-rango="{{ mat.c_rango }}"
+                  data-desc="{{ mat.descripcion }}"
+                  data-img="{{ url_for('static', filename=renders[mat_key].imagen_rel_path if renders[mat_key] is defined else 'img/pvc.jpg') }}"
+                  data-render-suelo="{{ renders[mat_key].suelo_ilustrado if renders[mat_key] is defined else 'Arcilloso' }}"
+                  data-nombre="{{ mat.nombre }}"
+                  {% if valores.material_id == mat_key %}selected{% endif %}>
+                  {{ mat.nombre }} &mdash; C = {{ mat.c_rango }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <!-- Tarjeta visual con imagen temática y descripción del material -->
+            <div class="d-flex align-items-center gap-3 mt-2 p-2 rounded-3 bg-light border">
+              <img id="form-mat-thumb" src="{{ url_for('static', filename=render_sel.imagen_rel_path) }}" alt="Miniatura material" class="mini-thumbnail-mat">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                  <strong class="text-dark small" id="thumb-mat-nombre">{{ materiales[mat_sel].nombre }}</strong>
+                  <span class="badge bg-primary text-white" id="thumb-mat-c" style="font-size: 0.72rem;">C = {{ materiales[mat_sel].c_rango }}</span>
+                </div>
+                <div class="small text-muted" id="desc-material">
+                  {% if valores.material_id in materiales %}
+                    {{ materiales[valores.material_id].descripcion }}
+                  {% else %}
+                    Podés adoptar el material propuesto según el uso o elegir cualquier otro de la lista.
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de cálculo -->
+          <div class="d-grid">
+            <button type="submit" class="btn btn-calculate">
+              <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              Calcular Resultados
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- COLUMNA DERECHA: VISUALIZACIÓN TÉCNICA Y RESULTADOS           -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="col-lg-7 col-12">
+    <!-- VISOR DUAL: 3D INTERACTIVO / RENDER FOTOREALISTA HD -->
+    <div class="viewer-3d-wrapper mb-4">
+      <div class="viewer-3d-toolbar">
+        <div class="d-flex align-items-center gap-2">
+          <!-- Selector de Modo de Visualización -->
+          <button type="button" class="view-tab-btn active" id="tab-btn-3d">
+            <span>🎮 3D Interactivo</span>
+          </button>
+          <button type="button" class="view-tab-btn" id="tab-btn-hd">
+            <span>🖼️ Ilustración HD</span>
+          </button>
+        </div>
+
+        <!-- Controles de cámara para el 3D -->
+        <div class="d-flex align-items-center gap-1 flex-wrap" id="toolbar-3d-controls">
+          <button type="button" class="btn-view-preset" id="btn-vista-iso" title="Vista isométrica estándar">
+            📐 Isométrica
+          </button>
+          <button type="button" class="btn-view-preset" id="btn-vista-sec" title="Corte transversal frontal">
+            🔍 Sección
+          </button>
+          <button type="button" class="btn-view-preset" id="btn-vista-lat" title="Perfil longitudinal lateral">
+            📏 Perfil
+          </button>
+          <button type="button" class="btn-view-preset" id="btn-reset-camara-3d" title="Restablecer posición inicial de la cámara">
+            🔄 Centrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel 1: Contenedor WebGL Three.js -->
+      <div id="zanja-3d-canvas" class="viewer-3d-container">
+        <!-- Indicador flotante de ayuda -->
+        <div class="viewer-3d-help-badge no-print">
+          🖱️ Arrastrar: rotar 360° | Rueda: zoom | Clic derecho: desplazar
+        </div>
+      </div>
+
+      <!-- Panel 2: Render Fotorealista HD (Imagen de acuerdo al tema) -->
+      <div id="render-hd-box" class="render-hd-container" style="display: none;">
+        <img id="render-hd-img" src="{{ url_for('static', filename=render_sel.imagen_rel_path) }}" alt="Render de zanja en alta definición">
+        <div class="render-hd-overlay">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <span class="badge bg-info text-dark fw-bold mb-1" style="font-size: 0.72rem;">ESQUEMA CONSTRUCTIVO HD</span>
+              <h6 class="fw-bold mb-0 text-white" id="render-hd-titulo">Zanja técnica con cañería de {{ materiales[mat_sel].nombre }}</h6>
+              <div class="small text-white-50">Cama de arena compactada • Relleno estratificado • Flujo de agua azul a sección llena</div>
+            </div>
+            <div>
+              <span class="badge bg-white bg-opacity-25 text-white border border-white-50 px-2 py-1">Hazen-Williams</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="viewer-3d-chips">
+        <div class="chip-item">
+          <span>📏 Diámetro a escala:</span>
+          <strong id="render-diam">{% if resultado %}{{ resultado.diametro_mm|formato_es(1) }} mm{% else %}{{ render_sel.diametro_ilustrado }}{% endif %}</strong>
+        </div>
+        <div class="chip-item">
+          <span>🌱 Suelo:</span>
+          <strong id="render-suelo">{{ render_sel.suelo_ilustrado }}</strong>
+        </div>
+        <div class="chip-item">
+          <span>🔘 Material:</span>
+          <strong id="render-mat-tag">{{ materiales[mat_sel].nombre }}</strong>
+        </div>
+      </div>
+    </div>
+
+    {% if resultado %}
+      <div class="card-modern mb-4">
+        <div class="card-header-modern">
+          <h5 class="mb-0 fw-bold fs-6 text-dark d-flex align-items-center">
+            <svg class="me-2 text-primary" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Resultados y Verificación
+          </h5>
+          <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 no-print" onclick="window.print()">
+            <svg class="me-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Imprimir Memoria
+          </button>
+        </div>
+
+        <div class="p-4 bg-white">
+          <div class="row g-3">
+
+            <!-- Output 1: Coeficiente de Rugosidad C -->
+            <div class="col-md-6 col-12">
+              <div class="kpi-card kpi-primary">
+                <div class="kpi-title">Rugosidad Aplicada Automáticamente</div>
+                <div class="d-flex align-items-baseline">
+                  <div class="kpi-value text-primary">C = {{ resultado.c_rugosidad|formato_es(0) }}</div>
+                </div>
+                <div class="small text-muted mt-2">
+                  Material: <strong class="text-dark">{{ resultado.material_nombre }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Output 2: Velocidad Resultante y Diagnóstico -->
+            <div class="col-md-6 col-12">
+              <div class="kpi-card {% if resultado.estado_velocidad.value == 'OPTIMO' %}kpi-success{% else %}kpi-warning{% endif %}">
+                <div class="kpi-title">Velocidad Media del Flujo de Agua</div>
+                <div class="d-flex align-items-baseline justify-content-between flex-wrap gap-2">
+                  <div class="d-flex align-items-baseline">
+                    <div class="kpi-value">{{ resultado.velocidad_ms|formato_es(2) }}</div>
+                    <span class="kpi-unit">m/s</span>
+                  </div>
+                  <div>
+                    {% if resultado.estado_velocidad.value == 'OPTIMO' %}
+                      <span class="badge-status badge-cumple">✓ Rango Óptimo</span>
+                    {% elif resultado.estado_velocidad.value == 'SEDIMENTACION' %}
+                      <span class="badge-status badge-advertencia">⚠️ Baja Velocidad</span>
+                    {% else %}
+                      <span class="badge-status badge-no-cumple">⛔ Exceso Velocidad</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Barra visual tipo indicador de rango -->
+                <div class="gauge-container">
+                  <div class="gauge-bar-zones">
+                    <div class="gauge-zone-sedimentacion" title="Menor a 0.6 m/s: Riesgo de sedimentación"></div>
+                    <div class="gauge-zone-optimo" title="0.6 a 2.0 m/s: Rango recomendado"></div>
+                    <div class="gauge-zone-erosion" title="Mayor a 2.0 m/s: Riesgo de erosión o golpe de ariete"></div>
+                  </div>
+                  <div class="gauge-labels">
+                    <span>0 m/s</span>
+                    <span>0,6</span>
+                    <span>2,0</span>
+                    <span>3+ m/s</span>
+                  </div>
+                </div>
+
+                <div class="small mt-2 p-2 rounded border-start border-3
+                  {% if resultado.clase_css_velocidad == 'success' %}bg-success-subtle border-success text-success-emphasis
+                  {% elif resultado.clase_css_velocidad == 'warning' %}bg-warning-subtle border-warning text-warning-emphasis
+                  {% else %}bg-danger-subtle border-danger text-danger-emphasis{% endif %}">
+                  {{ resultado.mensaje_velocidad }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Output 3: Pérdida de Carga Total Acumulada -->
+            <div class="col-12">
+              <div class="p-3 border rounded-3 bg-light">
+                <span class="text-uppercase small fw-bold d-block mb-2 text-primary" style="letter-spacing: 0.04em;">
+                  Pérdida de Carga Total Acumulada en el Tramo
+                </span>
+                <div class="row g-3 align-items-center">
+                  <div class="col-sm-6 col-12">
+                    <div class="p-3 bg-white rounded-3 border">
+                      <span class="small text-muted d-block mb-1">En metros de columna de agua:</span>
+                      <div class="d-flex align-items-baseline">
+                        <span class="kpi-value text-primary">{{ resultado.perdida_carga_mca|formato_es(2) }}</span>
+                        <span class="kpi-unit">m.c.a.</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6 col-12">
+                    <div class="p-3 bg-white rounded-3 border">
+                      <span class="small text-muted d-block mb-1">En presión equivalente:</span>
+                      <div class="d-flex align-items-baseline">
+                        <span class="kpi-value text-dark">{{ resultado.perdida_carga_bar|formato_es(3) }}</span>
+                        <span class="kpi-unit">bar</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="small text-muted mt-3 pt-2 border-top d-flex justify-content-between flex-wrap gap-2">
+                  <span>Gradiente unitario de pérdida: <strong>{{ resultado.j_unitaria_m_100m|formato_es(2) }} metros cada 100 m de cañería</strong></span>
+                  <span>Método de cálculo: <strong>Hazen-Williams</strong></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- TABLA SÍNTESIS DE VARIABLES HIDRÁULICAS -->
+          <div class="mt-4 pt-3 border-top">
+            <h6 class="fw-bold text-dark mb-2 d-flex align-items-center">
+              <svg class="me-2 text-primary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+              Resumen Técnico de Parámetros de Diseño
+            </h6>
+            <div class="table-responsive rounded border">
+              <table class="table table-summary-kpi table-striped align-middle">
+                <thead>
+                  <tr>
+                    <th>Parámetro</th>
+                    <th>Valor de Entrada</th>
+                    <th>Valor en Sistema Internacional</th>
+                    <th>Estado de Verificación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Caudal volumétrico de diseño</strong></td>
+                    <td>{{ valores.caudal_valor }} {{ valores.caudal_unidad|replace('l_s', 'L/s')|replace('m3_h', 'm³/h')|replace('m3_s', 'm³/s') }}</td>
+                    <td><code>{{ resultado.caudal_m3_s|formato_es(5) }} m³/s</code></td>
+                    <td><span class="badge bg-success-subtle text-success border border-success-subtle">Caudal positivo válido</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Diámetro interior de paso libre</strong></td>
+                    <td>{{ valores.diametro_valor }} {{ valores.diametro_unidad }}</td>
+                    <td><code>{{ resultado.diametro_m|formato_es(4) }} m</code> ({{ resultado.diametro_mm|formato_es(1) }} mm)</td>
+                    <td><span class="badge bg-success-subtle text-success border border-success-subtle">Sección circular llena</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Longitud física de la tubería</strong></td>
+                    <td>{{ valores.longitud_m }} metros</td>
+                    <td><code>{{ resultado.longitud_m|formato_es(2) }} m</code></td>
+                    <td><span class="badge bg-light text-secondary border">Tramo recto continuo</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Coeficiente de rugosidad Hazen-Williams</strong></td>
+                    <td>{{ resultado.material_nombre }}</td>
+                    <td><code>C = {{ resultado.c_rugosidad|formato_es(0) }}</code></td>
+                    <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">Coeficiente oficial asignado</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- MEMORIA DE CÁLCULO PASO A PASO -->
+          <div class="mt-4 pt-3 border-top">
+            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+              <svg class="me-2 text-secondary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Cálculos que hace el software (Proceso interno paso a paso)
+            </h6>
+
+            <div class="row g-2">
+              {% for paso in resultado.pasos_memoria %}
+                <div class="col-12">
+                  <div class="formula-box-modern">
+                    <div class="formula-title">{{ paso.titulo }}</div>
+                    <div class="formula-expr">{{ paso.formula }}</div>
+                    <div class="formula-subst">{{ paso.sustitucion }}</div>
+                    <div class="formula-res">&rArr; Resultado = {{ paso.resultado }}</div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    {% else %}
+      <div class="card-modern h-100 d-flex align-items-center justify-content-center p-5 text-center text-muted">
+        <div>
+          <svg class="mb-3 text-secondary opacity-50" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <h5 class="fw-bold text-dark">Complete los datos de entrada</h5>
+          <p class="small mb-0">Haga clic en "Calcular Resultados" para ver la velocidad, diagnóstico y pérdida de carga.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectUso = document.getElementById("uso_id");
+    const selectMaterial = document.getElementById("material_id");
+    const descMaterial = document.getElementById("desc-material");
+    const cajaPropuesta = document.getElementById("caja-propuesta-material");
+    const propuestaNombre = document.getElementById("propuesta-nombre");
+    const propuestaC = document.getElementById("propuesta-c");
+    const propuestaExplicacion = document.getElementById("propuesta-explicacion");
+    const btnAplicar = document.getElementById("btn-aplicar-propuesta");
+
+    // Miniatura del formulario y preview del Hero
+    const formMatThumb = document.getElementById("form-mat-thumb");
+    const thumbMatNombre = document.getElementById("thumb-mat-nombre");
+    const thumbMatC = document.getElementById("thumb-mat-c");
+    const heroImgPreview = document.getElementById("hero-img-preview");
+    const renderHdImg = document.getElementById("render-hd-img");
+    const renderHdTitulo = document.getElementById("render-hd-titulo");
+
+    // Selector de pestaña 3D vs HD
+    const tabBtn3D = document.getElementById("tab-btn-3d");
+    const tabBtnHD = document.getElementById("tab-btn-hd");
+    const canvas3D = document.getElementById("zanja-3d-canvas");
+    const renderHdBox = document.getElementById("render-hd-box");
+    const toolbar3DControls = document.getElementById("toolbar-3d-controls");
+
+    if (tabBtn3D && tabBtnHD && canvas3D && renderHdBox) {
+      tabBtn3D.addEventListener("click", function () {
+        tabBtn3D.classList.add("active");
+        tabBtnHD.classList.remove("active");
+        canvas3D.style.display = "block";
+        renderHdBox.style.display = "none";
+        if (toolbar3DControls) toolbar3DControls.style.display = "flex";
+      });
+
+      tabBtnHD.addEventListener("click", function () {
+        tabBtnHD.classList.add("active");
+        tabBtn3D.classList.remove("active");
+        canvas3D.style.display = "none";
+        renderHdBox.style.display = "flex";
+        if (toolbar3DControls) toolbar3DControls.style.display = "none";
+      });
+    }
+
+    let materialSugeridoActual = null;
+
+    function actualizarEstadoBoton() {
+      if (!btnAplicar || !materialSugeridoActual) return;
+      if (selectMaterial.value === materialSugeridoActual) {
+        btnAplicar.className = "btn btn-sm btn-outline-success text-nowrap rounded-pill px-3";
+        btnAplicar.innerHTML = "✓ Material sugerido aplicado";
+      } else {
+        btnAplicar.className = "btn btn-sm btn-primary text-nowrap rounded-pill px-3";
+        btnAplicar.innerHTML = "Usar material propuesto";
+      }
+    }
+
+    // Al seleccionar un uso: SOLO PROPONER, NO OBLIGAR NI CAMBIAR AUTOMÁTICAMENTE
+    if (selectUso) {
+      selectUso.addEventListener("change", function () {
+        const opt = this.options[this.selectedIndex];
+        if (!opt || !opt.value) {
+          if (cajaPropuesta) cajaPropuesta.style.display = "none";
+          materialSugeridoActual = null;
+          return;
+        }
+
+        materialSugeridoActual = opt.getAttribute("data-material");
+        const nombreMat = opt.getAttribute("data-material-nombre") || "";
+        const cMat = opt.getAttribute("data-material-c") || "";
+        const explicacion = opt.getAttribute("data-explicacion") || "";
+
+        // Mostrar la sugerencia en pantalla SIN forzar el desplegable de material
+        if (propuestaNombre) propuestaNombre.textContent = nombreMat;
+        if (propuestaC) propuestaC.textContent = `C = ${cMat}`;
+        if (propuestaExplicacion) propuestaExplicacion.textContent = explicacion;
+        if (cajaPropuesta) cajaPropuesta.style.display = "block";
+
+        actualizarEstadoBoton();
+      });
+
+      if (selectUso.value) {
+        selectUso.dispatchEvent(new Event("change"));
+      }
+    }
+
+    // Botón para aplicar la sugerencia voluntariamente
+    if (btnAplicar) {
+      btnAplicar.addEventListener("click", function () {
+        if (materialSugeridoActual && selectMaterial) {
+          selectMaterial.value = materialSugeridoActual;
+          selectMaterial.dispatchEvent(new Event("change"));
+        }
+      });
+    }
+
+    // Instanciar visor 3D interactivo WebGL a escala
+    let viewer3D = null;
+    if (canvas3D && window.Zanja3DViewer) {
+      viewer3D = new Zanja3DViewer("zanja-3d-canvas");
+    }
+
+    // Botones de vistas de cámara
+    const btnResetCam = document.getElementById("btn-reset-camara-3d");
+    const btnIso = document.getElementById("btn-vista-iso");
+    const btnSec = document.getElementById("btn-vista-sec");
+    const btnLat = document.getElementById("btn-vista-lat");
+
+    if (btnResetCam && viewer3D) btnResetCam.addEventListener("click", () => viewer3D.resetCamara());
+    if (btnIso && viewer3D) btnIso.addEventListener("click", () => viewer3D.setVistaIsometica());
+    if (btnSec && viewer3D) btnSec.addEventListener("click", () => viewer3D.setVistaFrontal());
+    if (btnLat && viewer3D) btnLat.addEventListener("click", () => viewer3D.setVistaLateral());
+
+    function sincronizar3D() {
+      if (!selectMaterial) return;
+      const optMat = selectMaterial.options[selectMaterial.selectedIndex];
+      if (!optMat) return;
+
+      const inputDiam = document.getElementById("diametro_valor");
+      const selectDiamUni = document.getElementById("diametro_unidad");
+      let dMm = parseFloat(inputDiam ? inputDiam.value : "110") || 110;
+      let dTexto = `${dMm} mm`;
+      if (selectDiamUni && selectDiamUni.value === "pulgadas") {
+        dTexto = `${dMm}" (${(dMm * 25.4).toFixed(1)} mm)`;
+        dMm = dMm * 25.4;
+      }
+
+      const sueloTexto = optMat.getAttribute("data-render-suelo") || "Arcilloso / tierra común";
+      const matNombre = optMat.getAttribute("data-nombre") || optMat.textContent;
+      const matImg = optMat.getAttribute("data-img") || "";
+      const matC = optMat.getAttribute("data-rango") || "";
+
+      // Actualizar imágenes temáticas en vivo
+      if (matImg) {
+        if (formMatThumb) formMatThumb.src = matImg;
+        if (heroImgPreview) heroImgPreview.src = matImg;
+        if (renderHdImg) renderHdImg.src = matImg;
+      }
+      if (thumbMatNombre) thumbMatNombre.textContent = matNombre;
+      if (thumbMatC) thumbMatC.textContent = `C = ${matC}`;
+      if (renderHdTitulo) renderHdTitulo.textContent = `Zanja técnica con cañería de ${matNombre}`;
+
+      // Actualizar footer técnico
+      const elDiam = document.getElementById("render-diam");
+      const elSuelo = document.getElementById("render-suelo");
+      const elMat = document.getElementById("render-mat-tag");
+
+      if (elDiam) elDiam.textContent = dTexto;
+      if (elSuelo) elSuelo.textContent = sueloTexto;
+      if (elMat) elMat.textContent = matNombre;
+
+      // Enviar actualización al modelo 3D WebGL
+      if (viewer3D) {
+        viewer3D.actualizar({
+          materialId: selectMaterial.value,
+          materialNombre: matNombre,
+          diametroMm: dMm,
+          diametroTexto: dTexto,
+          tipoSuelo: sueloTexto,
+          velocidadMs: {% if resultado %}{{ resultado.velocidad_ms }}{% else %}1.25{% endif %}
+        });
+      }
+    }
+
+    if (selectMaterial) {
+      selectMaterial.addEventListener("change", function () {
+        const optMat = this.options[this.selectedIndex];
+        if (descMaterial && optMat) {
+          descMaterial.textContent = optMat.getAttribute("data-desc") || "";
+        }
+        sincronizar3D();
+        actualizarEstadoBoton();
+      });
+    }
+
+    const inputDiam = document.getElementById("diametro_valor");
+    const selectDiamUni = document.getElementById("diametro_unidad");
+    if (inputDiam) inputDiam.addEventListener("input", sincronizar3D);
+    if (selectDiamUni) selectDiamUni.addEventListener("change", sincronizar3D);
+
+    sincronizar3D();
+  });
+</script>
+{% endblock %}

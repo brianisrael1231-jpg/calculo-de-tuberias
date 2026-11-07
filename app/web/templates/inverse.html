@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Modo Inverso - Cálculo de Diámetro Mínimo Hazen-Williams{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h2 class="h3 fw-bold mb-1 text-primary">Modo Inverso: Dimensionamiento de Diámetro Interior Mínimo</h2>
+        <p class="text-muted mb-0">
+          Determina el diámetro teórico mínimo admisible para no superar una pérdida de carga prefijada y sugiere el siguiente diámetro comercial.
+        </p>
+      </div>
+      <div>
+        <a href="{{ url_for('web.index') }}" class="btn btn-outline-secondary btn-sm">
+          &larr; Volver a Cálculo Directo
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if errores %}
+<div class="alert alert-danger shadow-sm alert-dismissible fade show" role="alert">
+  <h5 class="alert-heading fw-bold mb-2">Errores en los datos ingresados:</h5>
+  <ul class="mb-0 ps-3">
+    {% for error in errores %}
+      <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+</div>
+{% endif %}
+
+<form method="POST" action="{{ url_for('web.calcular_inverso') }}">
+  <div class="card mb-4 border">
+    <div class="card-header bg-white py-3">
+      <span class="badge bg-primary me-2">1</span>
+      <span class="fw-bold text-dark">Datos de Diseño para Cálculo Inverso</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Caudal -->
+        <div class="col-md-6 col-12">
+          <label for="caudal_valor" class="form-label fw-semibold">Caudal de diseño (Q) <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="caudal_valor" name="caudal_valor" placeholder="Ej: 20" required value="20">
+            <select class="form-select" style="max-width: 110px;" name="caudal_unidad">
+              <option value="l_s" selected>L/s</option>
+              <option value="m3_h">m³/h</option>
+              <option value="m3_s">m³/s</option>
+            </select>
+          </div>
+          <div class="form-text">Caudal continuo requerido a transportar.</div>
+        </div>
+
+        <!-- Longitud -->
+        <div class="col-md-6 col-12">
+          <label for="longitud_m" class="form-label fw-semibold">Longitud de la tubería (L) <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="longitud_m" name="longitud_m" placeholder="Ej: 500" required value="300">
+            <span class="input-group-text">m</span>
+          </div>
+          <div class="form-text">Longitud física total del tramo.</div>
+        </div>
+
+        <!-- Material y C -->
+        <div class="col-md-8 col-12">
+          <label for="material" class="form-label fw-semibold">Material proyectado</label>
+          <select class="form-select" id="material" name="material">
+            {% for mat_key, mat in materiales.items() %}
+              <option value="{{ mat_key }}" data-c="{{ mat.c_default }}" data-desc="{{ mat.uso_tipico }}" {% if mat_key == 'pvc' %}selected{% endif %}>
+                {{ mat.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+          <div class="form-text text-muted" id="ayuda-mat-inverso">
+            {{ materiales['pvc'].uso_tipico }}
+          </div>
+        </div>
+
+        <div class="col-md-4 col-12">
+          <label for="c_valor" class="form-label fw-semibold">Coeficiente C de Hazen-Williams</label>
+          <input type="text" class="form-control" id="c_valor" name="c_valor" value="150" required>
+          <div class="form-text small">Rango válido: {{ c_min }} a {{ c_max }}.</div>
+        </div>
+
+        <!-- Pérdida Admisible -->
+        <div class="col-md-6 col-12">
+          <label class="form-label fw-semibold">Tipo de límite de pérdida admisible</label>
+          <select class="form-select" name="hf_adm_tipo" id="hf_adm_tipo">
+            <option value="total_m" selected>Pérdida de carga total máxima admisible [m]</option>
+            <option value="unitaria_m_100m">Pérdida de carga unitaria admisible J [m/100m]</option>
+          </select>
+        </div>
+
+        <div class="col-md-6 col-12">
+          <label for="hf_adm_valor" class="form-label fw-semibold">Valor admisible de pérdida <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="hf_adm_valor" name="hf_adm_valor" placeholder="Ej: 5.0" value="5,0" required>
+            <span class="input-group-text" id="label-unidad-hf">m</span>
+          </div>
+          <div class="form-text">Límite superior de disipación de energía por fricción.</div>
+        </div>
+
+        <!-- Criterios de velocidad -->
+        <div class="col-md-6 col-12">
+          <label for="v_min_limite" class="form-label fw-semibold small">Velocidad mínima admisible (m/s)</label>
+          <input type="text" class="form-control form-control-sm" id="v_min_limite" name="v_min_limite" value="{{ limites.v_min|formato_es(2) }}">
+          <div class="form-text small text-warning-emphasis">PENDIENTE DE VERIFICAR (autolimpieza).</div>
+        </div>
+
+        <div class="col-md-6 col-12">
+          <label for="v_max_limite" class="form-label fw-semibold small">Velocidad máxima admisible (m/s)</label>
+          <input type="text" class="form-control form-control-sm" id="v_max_limite" name="v_max_limite" value="{{ limites.v_max|formato_es(2) }}">
+          <div class="form-text small text-warning-emphasis">PENDIENTE DE VERIFICAR (erosión y ariete).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-5">
+    <button type="submit" class="btn btn-primary btn-lg px-4 shadow">
+      Calcular Diámetro Mínimo Requerido
+    </button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const selectMat = document.getElementById("material");
+    const inputC = document.getElementById("c_valor");
+    const ayudaMat = document.getElementById("ayuda-mat-inverso");
+    const selectTipoHf = document.getElementById("hf_adm_tipo");
+    const labelUnidadHf = document.getElementById("label-unidad-hf");
+
+    if (selectMat && inputC) {
+      selectMat.addEventListener("change", function() {
+        const opt = this.options[this.selectedIndex];
+        if (opt) {
+          inputC.value = opt.getAttribute("data-c") || "150";
+          if (ayudaMat) ayudaMat.textContent = opt.getAttribute("data-desc") || "";
+        }
+      });
+    }
+
+    if (selectTipoHf && labelUnidadHf) {
+      selectTipoHf.addEventListener("change", function() {
+        if (this.value === "unitaria_m_100m") {
+          labelUnidadHf.textContent = "m/100m";
+        } else {
+          labelUnidadHf.textContent = "m";
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
